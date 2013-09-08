@@ -38,13 +38,15 @@ import org.json.JSONObject;
 
 public class UploadData implements Runnable, SubscribeListener, MessageListener
 {
-	String imagepath;
-	String savepath;
-	String socketid;
+	String _source_path;
+	String _output_path;
+	String _socketid;
+	String _executable_name;
 	String sessionid;
 	SocketIO _socket;
-	RedisOperations redis;
-	RedisNodeSubscriber subscriber;
+	RedisOperations _redis;
+	RedisNodeSubscriber _subscriber;
+	String _params;
 	
 	
 	public void onSubscribe(String channel, long subscribedChannels) {
@@ -68,7 +70,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		// TODO Auto-generated method stub
     	try 
     	{
-    		System.out.println(message);
+    		System.out.println("Message From Intercomm2:"+ message);
     		
 			JSONObject jobj = new JSONObject(message.toString());
 			Iterator<String> itr=jobj.keys();
@@ -81,7 +83,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				if(key.equals("socketid"))
 				{
-					socketid = jobj.getString("socketid");
+					_socketid = jobj.getString("socketid");
 				}
 				
 				if(key.equals("picture"))
@@ -89,15 +91,16 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					String str = new String();
 					str = jobj.getString("picture");
 					System.out.println(str);
+					
 					this.getImageAndSave(str);
 					
-					JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
+					//JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
 					
-					redis.publish("c1", "us");
-					
-					subscriber.unsubscribe();
-					subscriber.close();
+					_redis.publish("intercomm", "us");					
+					_subscriber.unsubscribe();
+					_subscriber.close();
 				}
+				
 			}
 			
 			//System.out.println(message);
@@ -108,36 +111,33 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		}
 	}
 
-	public UploadData(String imagepath, String savepath)
+	public UploadData(ConfigParser parser)
 	{
-		this.imagepath = imagepath;
-		this.savepath = savepath;
-		this.socketid = new String();
+		_source_path = parser.source_path;
+		_output_path = parser.output_path;
+		_executable_name = parser.executable_name;
+		_params = parser.params.toString();
+		
+		_socketid = new String();
+		
+		_redis = new RedisNode(new SimpleDataSource("localhost"));
 		
 		
-		System.out.println("Inside Constructor");
-		
-		redis = new RedisNode(new SimpleDataSource("localhost"));
-		
-		
-		subscriber = new RedisNodeSubscriber();
-	    subscriber.setDataSource(new SimpleDataSource("localhost"));
+		_subscriber = new RedisNodeSubscriber();
+	    _subscriber.setDataSource(new SimpleDataSource("localhost"));
 	    
-	    subscriber.setSubscribeListener(this);
+	    _subscriber.setSubscribeListener(this);
 	    
-	    subscriber.subscribe("c2");
+	    _subscriber.subscribe("intercomm2");
 	    
-	    subscriber.setMessageListener(this);
+	    _subscriber.setMessageListener(this);
 	    
-	    Thread t = new Thread(new Runnable() {
+	    Thread thread_redis = new Thread(new Runnable() {
             public void run() {
-                subscriber.runSubscription();
+                _subscriber.runSubscription();
             }
         });
-       t.start();
-	    
-        
-		System.out.println("Coming Out");
+       thread_redis.start();
 		
 	}
 	public void getImageAndSave(String imagepath)
@@ -148,7 +148,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		
 			HttpResponse response = hc.execute(get);
 			InputStream is = response.getEntity().getContent();
-			FileOutputStream out = new FileOutputStream(this.savepath);
+			FileOutputStream out = new FileOutputStream(this._output_path);
 			
 			int data=is.read();
 		
@@ -161,7 +161,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			}
 			is.close();
 			out.close();
-			System.out.println("Yayee! Done. Check.");
+			//System.out.println("Yayee! Done. Check.");
 			
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
@@ -190,8 +190,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		}
 		return result;
 	}
-	
-	public String CloudCVPostRequest() throws UnsupportedEncodingException
+	public String getToken()
 	{
 		HttpClient hc= new DefaultHttpClient();
 		
@@ -216,9 +215,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			
 				if(matcher.matches())
 				{
-					
-					token=matcher.group(2);
-					
+					token=matcher.group(2);		
 				}
 				
 			}
@@ -230,50 +227,60 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			e1.printStackTrace();
 		}
 		
-		
-		/*End*/
-		
-		HttpPost post = new HttpPost("http://godel.ece.vt.edu/cloudcv/matlab/");
-		
-		MultipartEntity reqentity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+		return token;
+	}
+	
+	public File[] getImageList()
+	{
 		
 		final Pattern pat= Pattern.compile("([^\\s]+(\\.(jpg|png|gif|bmp))$)", Pattern.CASE_INSENSITIVE);
 		
-		File dirList = new File(this.imagepath);
-		//System.out.println(dirList.isDirectory());
+		File dirList = new File(this._source_path);
+		
 		File[] imageList= dirList.listFiles(new FileFilter() {
 			
 			@Override
 			public boolean accept(File file) {
-				// TODO Auto-generated method stub
+
 				pat.matcher(file.getName()).matches();
-				//System.out.println(file.getName());
+
 				return true;
 			}
 		});
 		
-		int imagecount = imageList.length;
+		return imageList;
+
+	}
+	
+	public String CloudCVPostRequest() throws UnsupportedEncodingException
+	{
+	
+		String token = getToken();
+		File[] imagelist = getImageList();
+		int imagecount = imagelist.length;
 		
+		HttpClient hc= new DefaultHttpClient();
+		HttpPost post = new HttpPost("http://godel.ece.vt.edu/cloudcv/matlab/");
+		
+		MultipartEntity reqentity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);		
 		reqentity.addPart("count", new StringBody(Integer.toString(imagecount)));
 		reqentity.addPart("token", new StringBody(token));
+		reqentity.addPart("executable",new StringBody(this._executable_name));
+		reqentity.addPart("exec_params", new StringBody(this._params));
 		
-		while(socketid.equals(""))
+		while(_socketid.equals(""))
 		{
 			try {
-				
-				System.out.println("Pausing for socketid");
-				Thread.sleep(2000);
+				Thread.sleep(3000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		System.out.println(socketid);
-		reqentity.addPart("socketid", new StringBody(this.socketid));
+		reqentity.addPart("socketid", new StringBody(this._socketid));
 		
 		for(int i=0;i<imagecount;i++)
 		{
-			FileBody fileBody = new FileBody(imageList[i], "application/octet-stream");
+			FileBody fileBody = new FileBody(imagelist[i], "application/octet-stream");
 			
 			try{
 				reqentity.addPart("file", fileBody);
@@ -295,8 +302,6 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 
 			if(entity!=null)
 			{
-				//System.out.println("Uploading Images, Waiting for response");
-				
 				InputStream instream = entity.getContent();
 				InputStreamReader isr = new InputStreamReader(instream);
 				BufferedReader br= new BufferedReader(isr);
@@ -304,7 +309,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				while((line=br.readLine())!=null)
 				{
-					//System.out.println(line);	
+					System.out.println(line);	
 					
 					try{
 						if(line.startsWith("[")&&line.endsWith("]"))
@@ -342,13 +347,9 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		// TODO Auto-generated method stub
 
 			try {
-				System.out.println("SocketID: " + socketid);
+				System.out.println("SocketID: " + _socketid);
 				this.CloudCVPostRequest();
-				System.out.println("######################");
-				
-				//Thread.sleep(3000);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}
