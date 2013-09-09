@@ -9,28 +9,22 @@ import io.socket.*;
 
 public class Sockets_CCV {
 	
-	public String imagepath;
-	public String savepath;
-	public String socketid;
-	public String sessionid;
-	public SocketIO _socket;
+
 	
-	public Sockets_CCV(String imagepath, String savepath) {
-		// TODO Auto-generated constructor stub
-		this.imagepath=imagepath;
-		this.savepath=savepath;
-		socketid=new String();
-		sessionid=new String();
+	public Sockets_CCV() 
+	{	
+				
+
 	}
 
-	public static void main(String[] args) throws IOException {
-		ConfigParser cp = new ConfigParser("/home/dexter/projects/vt/pcloudcv/config.json");
+	public static void main(String[] args) throws IOException 
+	{
+		//Sockets_CCV obj = new Sockets_CCV("/home/dexter/projects/vt/mcloudcv/jcloudcv/src/config.json", null, null, null);
+		
+		ConfigParser cp = new ConfigParser("/home/dexter/projects/vt/mcloudcv/config.json");
 		cp.readConfigFile();
-		cp.parseArguments(args);
+		cp.parseArguments("","","");
 		cp.getParams();
-		
-		
-		Sockets_CCV testObj=new Sockets_CCV(cp.executable_name,cp.output_path);
 		
 		try 
 		{
@@ -49,8 +43,7 @@ public class Sockets_CCV {
 			
 			e.printStackTrace();
 		}
-		
-	
+
 	}
 	
 }

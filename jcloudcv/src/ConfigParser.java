@@ -29,7 +29,7 @@ class ArgumentException extends Exception
 }
 public class ConfigParser 
 {
-	String executable_name, source_path, output_path, file;
+	public String executable_name, source_path, output_path, file;
 	JSONArray data;
 	JSONObject json_data, params;
 	
@@ -42,7 +42,7 @@ public class ConfigParser
 		this.params = new JSONObject();
 	}
 	
-	void readConfigFile()
+	public void readConfigFile()
 	{
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(file));
@@ -82,7 +82,7 @@ public class ConfigParser
 		}
 		
 	}
-	void changePath()
+	public void changePath()
 	{
 		try
 		{
@@ -104,7 +104,7 @@ public class ConfigParser
 			
 		}
 	}
-	void setParams()
+	public void setParams()
 	{
 		try
 		{
@@ -125,7 +125,7 @@ public class ConfigParser
 			
 		}	
 	}
-	void getParams()
+	public void getParams()
 	{
 		System.out.println("Executable Name: "+this.executable_name);
 		System.out.println("Output Path: "+this.output_path);
@@ -133,22 +133,22 @@ public class ConfigParser
 		System.out.println("Additional Parameters: "+this.params);
 	}
 	
-	void parseArguments(String []list)
+	public void parseArguments(String list1, String list2, String list3)
 	{
 		String sourcepath = new String();
 		String resultapth = new String();
 		String name = new String();
 		
-		if(list.length > 1 )
-			sourcepath = list[1];
-		if(list.length > 2)
-			resultapth = list[2];
-		if(list.length > 3)
-			name = list[3];
+		if(list1!=null)
+			sourcepath = list1;
+		if(list2!=null)
+			resultapth = list2;
+		if(list3!=null)
+			name = list3;
 		
 		this.readConfigFile();
 		this.changePath();
-		this.setParams();
+		
 		
 		try
 		{
@@ -178,6 +178,8 @@ public class ConfigParser
 			{
 				throw new ArgumentException(2);
 			}
+			
+			this.setParams();
 		}
 		
 		catch (ArgumentException e) {

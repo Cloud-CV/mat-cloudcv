@@ -42,7 +42,7 @@ class SocketCallback implements IOCallback
 
     @Override
     public void onMessage(String data, IOAcknowledge ack) {
-        System.out.println("Server said: " + data);
+        //System.out.println("Server said: " + data);
     }
 
     @Override
@@ -68,16 +68,14 @@ class SocketCallback implements IOCallback
         
 		try {
 			jobj = new JSONObject(args[0].toString());
-			System.out.println(jobj.length());
+			//System.out.println(jobj.length());
 			
 			Iterator<String> itr=jobj.keys();
 			while(itr.hasNext())
 			{
 				String key=itr.next();
-				//System.out.println(key);
 				if(key.equals("visit"))
 				{
-					System.out.println("visit");
 				}
 				else if(key.equals("socketid"))
 				{
@@ -90,6 +88,7 @@ class SocketCallback implements IOCallback
 				}
 				else if(key.equals("name"))
 				{
+					
 					socket.emit("send_message", this.exec_name);
 				}
 				else if(key.equals("data"))
@@ -108,7 +107,7 @@ class SocketCallback implements IOCallback
 				{
 					String str=jobj.getString("mat");
 					System.out.println("Mat: " + str);
-					str= "{Mat: \"" + str + "\"}";
+					str= "{mat: \"" + str + "\"}";
 					this.redis.publish("intercomm2", str);
 				}
 				
@@ -136,19 +135,19 @@ class SocketConnection implements SubscribeListener, MessageListener
 	String _exec_name;
      
 	public void onSubscribe(String channel, long subscribedChannels) {
-        System.out.println("s: " + channel + ":" + subscribedChannels);
+        //System.out.println("s: " + channel + ":" + subscribedChannels);
     }
 
     public void onUnsubscribe(String channel, long subscribedChannels) {
-        System.out.println("us: " + channel + ":" + subscribedChannels);
+        //System.out.println("us: " + channel + ":" + subscribedChannels);
     }
 
     public void onPSubscribe(String pattern, long subscribedChannels) {
-        System.out.println("ps: " + pattern + ":" + subscribedChannels);
+        //System.out.println("ps: " + pattern + ":" + subscribedChannels);
     }
 
     public void onPUnsubscribe(String pattern, long subscribedChannels) {
-        System.out.println("pus: " + pattern + ":" + subscribedChannels);
+     //   System.out.println("pus: " + pattern + ":" + subscribedChannels);
     }
     
     @Override
@@ -157,7 +156,7 @@ class SocketConnection implements SubscribeListener, MessageListener
 		// TODO Auto-generated method stub
     	System.out.println("Message From Server:" + message);
     	
-    	if(message.startsWith("us"))
+    	if(message.startsWith("unsubscribe"))
     	{
     		socket.disconnect();
     		_subscriber.unsubscribe();

@@ -50,19 +50,19 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	
 	
 	public void onSubscribe(String channel, long subscribedChannels) {
-        System.out.println("s: " + channel + ":" + subscribedChannels);
+        //System.out.println("s: " + channel + ":" + subscribedChannels);
     }
 
     public void onUnsubscribe(String channel, long subscribedChannels) {
-        System.out.println("us: " + channel + ":" + subscribedChannels);
+        //System.out.println("us: " + channel + ":" + subscribedChannels);
     }
 
     public void onPSubscribe(String pattern, long subscribedChannels) {
-        System.out.println("ps: " + pattern + ":" + subscribedChannels);
+        //System.out.println("ps: " + pattern + ":" + subscribedChannels);
     }
 
     public void onPUnsubscribe(String pattern, long subscribedChannels) {
-        System.out.println("pus: " + pattern + ":" + subscribedChannels);
+        //System.out.println("pus: " + pattern + ":" + subscribedChannels);
     }
     
     @Override
@@ -70,7 +70,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		// TODO Auto-generated method stub
     	try 
     	{
-    		System.out.println("Message From Intercomm2:"+ message);
+    		//System.out.println("Message From Intercomm2: "+ message);
     		
 			JSONObject jobj = new JSONObject(message.toString());
 			Iterator<String> itr=jobj.keys();
@@ -79,7 +79,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			{
 				String key=itr.next();
 				
-				System.out.println(key);
+				//System.out.println(key);
 				
 				if(key.equals("socketid"))
 				{
@@ -90,13 +90,28 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				{
 					String str = new String();
 					str = jobj.getString("picture");
-					System.out.println(str);
+					//System.out.println(str);
 					
-					this.getImageAndSave(str);
+					this.getImageAndSave(str,"result.jpg");
 					
 					//JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
 					
-					_redis.publish("intercomm", "us");					
+					_redis.publish("intercomm", "unsubscribe");					
+					_subscriber.unsubscribe();
+					_subscriber.close();
+				}
+				
+				if(key.equals("mat"))
+				{
+					String str = new String();
+					str = jobj.getString("mat");
+					//System.out.println(str);
+					
+					this.getImageAndSave(str, "results.txt");
+					
+					//JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
+					
+					_redis.publish("intercomm", "unsubscribe");					
 					_subscriber.unsubscribe();
 					_subscriber.close();
 				}
@@ -140,7 +155,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
        thread_redis.start();
 		
 	}
-	public void getImageAndSave(String imagepath)
+	public void getImageAndSave(String imagepath, String filename)
 	{
 		try {
 		HttpClient hc= new DefaultHttpClient();
@@ -148,14 +163,11 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		
 			HttpResponse response = hc.execute(get);
 			InputStream is = response.getEntity().getContent();
-			FileOutputStream out = new FileOutputStream(this._output_path);
+			FileOutputStream out = new FileOutputStream(this._output_path+"/"+filename);
 			
 			int data=is.read();
-		
-			System.out.println("\n\n\n\n");
 			while(data!=-1) {
-			  //do something with data...
-				
+
 				out.write(data);
 				data=is.read();
 			}
@@ -309,11 +321,12 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				while((line=br.readLine())!=null)
 				{
-					System.out.println(line);	
+					//System.out.println(line);	
 					
 					try{
 						if(line.startsWith("[")&&line.endsWith("]"))
 						{
+							
 							JSONArray array= new JSONArray(line);
 						//	System.out.println(array.length());
 							if(array.length()>0)
@@ -323,11 +336,12 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 							}
 							
 						}
-				
+					 
 					}catch(Exception e)
 					{
 						System.out.println(e);
-					}		
+					}
+							
 				}
 				
 				instream.close();
@@ -347,7 +361,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		// TODO Auto-generated method stub
 
 			try {
-				System.out.println("SocketID: " + _socketid);
+				//System.out.println("SocketID: " + _socketid);
 				this.CloudCVPostRequest();
 			} catch (Exception e) {
 				e.printStackTrace();
