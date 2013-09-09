@@ -4,10 +4,10 @@
 [
     {
         "name": "ImageStitch",
-        "path": "/home/dexter/Pictures/test_download",
+        "path": "/home/dexter/Pictures/test_download/1",
         "output": "/home/dexter/Pictures/test_download",
         "params" :{
-          "warp" : "plane"  
+          "warp" : "fisheye"  
         }
     },
     

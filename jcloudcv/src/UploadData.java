@@ -253,10 +253,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			
 			@Override
 			public boolean accept(File file) {
+				if(file.isFile())
+				{
+					pat.matcher(file.getName()).matches();
 
-				pat.matcher(file.getName()).matches();
-
-				return true;
+					return true;
+				}
+				else return false;
+				
 			}
 		});
 		
@@ -321,8 +325,8 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				while((line=br.readLine())!=null)
 				{
-					//System.out.println(line);	
-					
+					System.out.println(line);	
+					/*
 					try{
 						if(line.startsWith("[")&&line.endsWith("]"))
 						{
@@ -341,7 +345,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					{
 						System.out.println(e);
 					}
-							
+					*/		
 				}
 				
 				instream.close();
