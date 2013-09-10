@@ -23,27 +23,30 @@ public class Sockets_CCV {
 		
 		ConfigParser cp = new ConfigParser("/home/dexter/projects/vt/mcloudcv/config.json");
 		cp.readConfigFile();
-		cp.parseArguments("","","");
+		int val = cp.parseArguments("","","");
 		cp.getParams();
 		
-		try 
+		if(val==1)
 		{
-			UploadData udobj =new UploadData(cp);
+			try 
+			{
+				UploadData udobj =new UploadData(cp);
 			
-			SocketConnection sock = new SocketConnection(cp.executable_name, cp.output_path);
-			sock.socketIOConnection();
+				SocketConnection sock = new SocketConnection(cp.executable_name, cp.output_path);
+				sock.socketIOConnection();
 		
-			RedisOperations redis = new RedisNode(new SimpleDataSource("localhost"));
-		    redis.publish("intercomm", "message");  
+				RedisOperations redis = new RedisNode(new SimpleDataSource("localhost"));
+				redis.publish("intercomm", "message");  
 		    
-		    new Thread(udobj).start();
-		} 
-		catch (Exception e) 
-		{
+				new Thread(udobj).start();
+			} 
+			catch (Exception e) 
+			{
 			
-			e.printStackTrace();
-		}
+				e.printStackTrace();
+			}
 
+		}
 	}
 	
 }

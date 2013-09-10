@@ -152,7 +152,7 @@ public class ConfigParser
 			if(isPresent == false)
 				throw new ArgumentException(4);
 	}
-	public void parseArguments(String list1, String list2, String list3)
+	public int parseArguments(String list1, String list2, String list3)
 	{
 		String sourcepath = new String();
 		String resultapth = new String();
@@ -202,7 +202,8 @@ public class ConfigParser
 		
 		catch (Exception e) {
 			System.out.println(e.toString());
-			System.exit(-1);
+			return 0;
 		}
+		return 1;
 	}
 }
