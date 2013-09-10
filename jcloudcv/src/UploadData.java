@@ -86,19 +86,22 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					_socketid = jobj.getString("socketid");
 				}
 				
+				if(key.equals("unsubscribe"))
+				{
+					_redis.publish("intercomm", "unsubscribe");					
+					_subscriber.unsubscribe();
+					_subscriber.close();
+				}
 				if(key.equals("picture"))
 				{
 					String str = new String();
 					str = jobj.getString("picture");
 					//System.out.println(str);
 					
-					this.getImageAndSave(str,"result.jpg");
+					this.getImageAndSave(str,"result"+this._socketid+".jpg");
 					
 					//JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
-					
-					_redis.publish("intercomm", "unsubscribe");					
-					_subscriber.unsubscribe();
-					_subscriber.close();
+				
 				}
 				
 				if(key.equals("mat"))
@@ -107,13 +110,8 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					str = jobj.getString("mat");
 					//System.out.println(str);
 					
-					this.getImageAndSave(str, "results.txt");
+					this.getImageAndSave(str, "results"+this._socketid+".txt");
 					
-					//JOptionPane.showMessageDialog(null, "Image Saved: "+ this.savepath);
-					
-					_redis.publish("intercomm", "unsubscribe");					
-					_subscriber.unsubscribe();
-					_subscriber.close();
 				}
 				
 			}
@@ -173,7 +171,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			}
 			is.close();
 			out.close();
-			//System.out.println("Yayee! Done. Check.");
+			System.out.println("File Saved: "+this._output_path+"/"+filename);
 			
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block

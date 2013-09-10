@@ -95,6 +95,7 @@ class SocketCallback implements IOCallback
 				{
 					String str=jobj.getString("data");
 					System.out.println("Data:" + str);
+					this.redis.publish("intercomm2","{unsubscribe:\"\"}");
 				}
 				else if(key.equals("picture"))
 				{
@@ -109,6 +110,10 @@ class SocketCallback implements IOCallback
 					System.out.println("Mat: " + str);
 					str= "{mat: \"" + str + "\"}";
 					this.redis.publish("intercomm2", str);
+				}
+				else if(key.equals("request_data"))
+				{
+					socket.emit("send_message", "data");
 				}
 				
 			}
