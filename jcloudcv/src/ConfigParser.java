@@ -24,6 +24,8 @@ class ArgumentException extends Exception
 			str = "Path to the folder containing images is not defined.\n Define it through -I parameter\n";
 		if(val==2)
 			str = "Path to the output folder is not defined.\n Define it through -O parameter\n";
+		if(val==4)
+			str = "Incorrect or mis-spelled executable name";
 		return str;
 	}
 }
@@ -132,7 +134,24 @@ public class ConfigParser
 		System.out.println("Input Folder: "+this.source_path);
 		System.out.println("Additional Parameters: "+this.params);
 	}
-	
+	public void verify()throws JSONException, ArgumentException
+	{
+
+			int l = data.length();
+			JSONObject config_data;
+			boolean isPresent = false;
+			for(int i=0;i<l;i++)
+			{
+				config_data = data.getJSONObject(i);
+				
+				if(config_data.getString("name").equals(executable_name))
+				{
+					isPresent = true;
+				}
+			}
+			if(isPresent == false)
+				throw new ArgumentException(4);
+	}
 	public void parseArguments(String list1, String list2, String list3)
 	{
 		String sourcepath = new String();
@@ -147,19 +166,18 @@ public class ConfigParser
 			name = list3;
 		
 		this.readConfigFile();
-		this.changePath();
-		
-		
 		try
 		{
 			if(!name.equals(""))
 			{
 				this.executable_name=name;
+				verify();
 			}
 			else if(executable_name.equals(""))
 			{
 				throw new ArgumentException(0);
 			}
+			this.changePath();
 			
 			if(!sourcepath.equals(""))
 			{
@@ -182,7 +200,7 @@ public class ConfigParser
 			this.setParams();
 		}
 		
-		catch (ArgumentException e) {
+		catch (Exception e) {
 			System.out.println(e.toString());
 			System.exit(-1);
 		}
