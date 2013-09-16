@@ -1,22 +1,20 @@
 
 import java.io.IOException;
 
+import org.apache.http.impl.conn.tsccm.WaitingThread;
 import org.idevlab.rjc.RedisNode;
 import org.idevlab.rjc.RedisOperations;
 import org.idevlab.rjc.ds.SimpleDataSource;
 
+import sun.awt.windows.ThemeReader;
+
 import io.socket.*;
 
 public class Sockets_CCV {
-	
-
-	
 	public Sockets_CCV() 
 	{	
-				
-
 	}
-
+	
 	public static void main(String[] args) throws IOException 
 	{
 		//Sockets_CCV obj = new Sockets_CCV("/home/dexter/projects/vt/mcloudcv/jcloudcv/src/config.json", null, null, null);
@@ -35,10 +33,19 @@ public class Sockets_CCV {
 				SocketConnection sock = new SocketConnection(cp.executable_name, cp.output_path);
 				sock.socketIOConnection();
 		
-				RedisOperations redis = new RedisNode(new SimpleDataSource("localhost"));
-				redis.publish("intercomm", "message");  
-		    
-				new Thread(udobj).start();
+				Thread t = new Thread(udobj);
+				t.start();
+				t.join();
+				
+				sock.updateParameters(cp.executable_name, cp.output_path);
+				sock.startRedis();
+				
+				t = new Thread(udobj);
+				t.start();
+				
+				
+				//sock.unsubscribe();
+				
 			} 
 			catch (Exception e) 
 			{
@@ -47,6 +54,7 @@ public class Sockets_CCV {
 			}
 
 		}
+		
 	}
 	
 }

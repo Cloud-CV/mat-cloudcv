@@ -19,6 +19,7 @@ import org.json.JSONObject;
 class SocketCallback implements IOCallback
 {
 	SocketIO socket;
+	
 	String socketid;
 	String exec_name;
 	RedisOperations redis;
@@ -80,6 +81,8 @@ class SocketCallback implements IOCallback
 				else if(key.equals("socketid"))
 				{
 					socketid=jobj.getString("socketid");
+					
+					System.out.println("SocketID: "+socketid);
 					
 					socketid= "{socketid:" + socketid + "}";
 					
@@ -163,33 +166,34 @@ class SocketConnection implements SubscribeListener, MessageListener
     	
     	if(message.startsWith("unsubscribe"))
     	{
-    		socket.disconnect();
-    		_subscriber.unsubscribe();
-    		_subscriber.close();   		
+    	//	socket.disconnect();
+    		if(socket.isConnected())
+    			System.out.println("Still Connected");
+    		else
+    			System.out.println("Socket Disconnected");
     		
-	
-    		System.out.println("Connections Closed");
+    		if(_subscriber.isConnected()){
+    			_subscriber.unsubscribe();
+    			_subscriber.close();
+    			System.out.println("Redis Subscriber for Sockets Disconnected");
+    		}
+    		//System.out.println("Subscriber2 Closed");
     		
     	}
     	
 	}
-   
-	public SocketConnection(String exec_name, String output_path)
-	{
-		
-		this._exec_name = exec_name;
-		this._output_path = output_path;
-		
-		_redis = new RedisNode(new SimpleDataSource("localhost"));
-		
-		_subscriber = new RedisNodeSubscriber();
+    public void startRedis()
+    {
+        this.socket.emit("send_message","socketid");
+        
+    	_subscriber = new RedisNodeSubscriber();
 	    _subscriber.setDataSource(new SimpleDataSource("localhost"));
 	    
 	    _subscriber.setSubscribeListener(this);
-	    
-	    _subscriber.subscribe("intercomm");
-	    
+	  
+	    _subscriber.subscribe("intercomm");    
 	    _subscriber.setMessageListener(this);
+	    
 	    
 	    Thread t = new Thread(new Runnable() {
             public void run() {
@@ -197,10 +201,25 @@ class SocketConnection implements SubscribeListener, MessageListener
             }
         });
         t.start();
+        
+        System.out.println("New Redis Connection Formed");
+    }
+    
+    public void updateParameters(String exec_name, String output_path)
+    {
+    	this._exec_name = exec_name;
+    	this._output_path = output_path;
+    }
+    
+	public SocketConnection(String exec_name, String output_path)
+	{
+		
+		this._exec_name = exec_name;
+		this._output_path = output_path;
 
 	}
 	
-	public SocketIO socketIOConnection() throws Exception
+	public void socketIOConnection() throws Exception
 	{
 		SocketIO.setDefaultSSLSocketFactory(SSLContext.getDefault());
 		
@@ -213,6 +232,17 @@ class SocketConnection implements SubscribeListener, MessageListener
 
 			e.printStackTrace();
 		}
-		return socket;
-	}	
+		
+		this.startRedis();	
+	}
+	
+	public void unsubscribe()
+	{
+		this.socket.disconnect();
+		if(_subscriber.isConnected())
+		{
+			_subscriber.unsubscribe();
+			_subscriber.close();
+		}
+	}
 }

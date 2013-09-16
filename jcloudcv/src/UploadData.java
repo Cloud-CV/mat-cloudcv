@@ -47,7 +47,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	RedisOperations _redis;
 	RedisNodeSubscriber _subscriber;
 	String _params;
-	
+	Thread _thread_redis;
 	
 	public void onSubscribe(String channel, long subscribedChannels) {
         //System.out.println("s: " + channel + ":" + subscribedChannels);
@@ -88,9 +88,12 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				if(key.equals("unsubscribe"))
 				{
-					_redis.publish("intercomm", "unsubscribe");					
-					_subscriber.unsubscribe();
-					_subscriber.close();
+					_redis.publish("intercomm", "unsubscribe");	
+					if(_subscriber.isConnected()){
+						_subscriber.unsubscribe();		
+						_subscriber.close();
+						System.out.println("Redis Subscriber for Sockets Disconnected");
+					}
 				}
 				if(key.equals("picture"))
 				{
@@ -145,14 +148,21 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	    
 	    _subscriber.setMessageListener(this);
 	    
-	    Thread thread_redis = new Thread(new Runnable() {
-            public void run() {
+	    _thread_redis = new Thread(new Runnable() 
+	    {
+            public void run() 
+            {
                 _subscriber.runSubscription();
+                //System.out.println("Subscriber Thread ending.");
             }
         });
-       thread_redis.start();
-		
+	    
+      _thread_redis.start();
+       
+       //System.out.println("Constructor ending after thread.start()");
+       
 	}
+	
 	public void getImageAndSave(String imagepath, String filename)
 	{
 		try {
@@ -229,6 +239,9 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				}
 				
 			}
+			getResult.close();
+			getbr.close();
+			
 		} catch (ClientProtocolException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -345,8 +358,10 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					}
 					*/		
 				}
-				
+				isr.close();
+				br.close();
 				instream.close();
+				
 			}
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
@@ -368,6 +383,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
+			try {
+				_thread_redis.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//System.out.println("Post Requests End!");
 	}
 
 }
