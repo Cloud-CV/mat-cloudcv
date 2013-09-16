@@ -92,7 +92,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					if(_subscriber.isConnected()){
 						_subscriber.unsubscribe();		
 						_subscriber.close();
-						System.out.println("Redis Subscriber for Sockets Disconnected");
+						System.out.println("Redis Subscriber for Post Requests Disconnected");
 					}
 				}
 				if(key.equals("picture"))
