@@ -248,10 +248,7 @@ class SocketConnection implements SubscribeListener, MessageListener
 	}
 	
 	public void unsubscribe()
-	{	if(this.socket.isConnected())
-		{
-			this.socket.disconnect();
-		}
+	{
 		if(_subscriber.isConnected())
 		{
 			_subscriber.unsubscribe();
