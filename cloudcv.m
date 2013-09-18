@@ -6,6 +6,16 @@ end
 
 function obj = initialize(configFile, imageDir, resultDir, execName)
     
+    if ~exist('imageDir','var') || isempty(imageDir)
+        imageDir = '';
+    end
+    if ~exist('resultDir','var') || isempty(resultDir)
+        resultDir = '';
+    end
+    if ~exist('execName','var') || isempty(execName)
+        execName = '';
+    end
+
     cp = javaObject('ConfigParser',configFile);
     javaMethod('readConfigFile', cp);
     val = javaMethod('parseArguments', cp, imageDir, resultDir, execName);

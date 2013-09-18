@@ -8,7 +8,22 @@ catch exception
     else error('problem adding path. No error caught');
     end
 end
-unix('redis-server')
+
+% check if redis-server is up
+[status,result] = system('redis-cli ping');
+if (status ~= 0) && (status~=1)
+    error('redis-client not present. Need redis for communicating with CloudCV servers');
+end
+if ~isequal(result,'PONG')
+    [status, result] = system('redis-server &');
+    if (status ~= 0) 
+        disp(result);
+        error('redis-server not present. Need redis for communicating with CloudCV servers');
+    end
+    disp('Starting redis-server');
+end
+
+
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-codec-1.6.jar'))
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-logging-1.1.1.jar'))
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-math-2.2.jar'))
