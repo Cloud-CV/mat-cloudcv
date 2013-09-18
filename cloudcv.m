@@ -23,11 +23,10 @@ function r = startUpload(cp)
     r = obj1;
 end
 
-function [r0, r1,r2] = reconnect(cp, obj, imageDir, resultDir, execName)
+function [r1,r2] = reconnect(cp, obj, imageDir, resultDir, execName)
     val = javaMethod('parseArguments', cp, imageDir, resultDir, execName);
     if(val==1)
         javaMethod('getParams',cp);
-        r0=cp;
     end
     
     r1 = startUpload(cp);
