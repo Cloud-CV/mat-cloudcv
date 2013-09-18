@@ -18,7 +18,7 @@ import org.json.JSONObject;
 
 class SocketCallback implements IOCallback
 {
-	SocketIO socket;
+	SocketIO socket=null;
 	
 	String socketid;
 	String exec_name;
@@ -223,22 +223,35 @@ class SocketConnection implements SubscribeListener, MessageListener
 	{
 		SocketIO.setDefaultSSLSocketFactory(SSLContext.getDefault());
 		
-		socket = new SocketIO("http://godel.ece.vt.edu:8000/");
+		if(socket==null)
+		{
+			socket = new SocketIO("http://godel.ece.vt.edu:8000/");
+			
+		}
 		
-		try {
-			socket.connect(new SocketCallback(socket,this._exec_name));
+		if(!socket.isConnected())
+		{
+			try 
+			{
+				socket.connect(new SocketCallback(socket,this._exec_name));
 
-		} catch (Exception e) {
-
-			e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			System.out.println("Socket Already Connected.");
 		}
 		
 		this.startRedis();	
 	}
 	
 	public void unsubscribe()
-	{
-		this.socket.disconnect();
+	{	if(this.socket.isConnected())
+		{
+			this.socket.disconnect();
+		}
 		if(_subscriber.isConnected())
 		{
 			_subscriber.unsubscribe();

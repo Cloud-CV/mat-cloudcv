@@ -8,6 +8,7 @@ catch exception
     else error('problem adding path. No error caught');
     end
 end
+unix('redis-server')
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-codec-1.6.jar'))
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-logging-1.1.1.jar'))
 javaaddpath(strcat(currDir,'/jcloudcv/lib/commons-math-2.2.jar'))

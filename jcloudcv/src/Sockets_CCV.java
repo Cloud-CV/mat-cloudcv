@@ -40,6 +40,7 @@ public class Sockets_CCV {
 				sock.updateParameters(cp.executable_name, cp.output_path);
 				sock.startRedis();
 				
+				udobj = new UploadData(cp);
 				t = new Thread(udobj);
 				t.start();
 				

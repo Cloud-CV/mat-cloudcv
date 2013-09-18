@@ -1,21 +1,17 @@
 function output = cloudcv
-    output.setParam = @setParam;
-    output.startSocket=@startSocket;
-    output.startUpload=@startUpload;
+    output.initialize = @initialize;
+    output.start=@start;
     output.reconnect = @reconnect;
 end
 
-function r = setParam(configFile, imageDir, resultDir, execName)
+function obj = initialize(configFile, imageDir, resultDir, execName)
     
-%     obj=javaObject('Sockets_CCV',imageDir,resultDir);
     cp = javaObject('ConfigParser',configFile);
-    
     javaMethod('readConfigFile', cp);
     val = javaMethod('parseArguments', cp, imageDir, resultDir, execName);
     if(val==1)
-        
         javaMethod('getParams',cp);
-        r=cp;
+        obj=cp;
     end
     
 end
@@ -27,17 +23,26 @@ function r = startUpload(cp)
     r = obj1;
 end
 
-function r = startSocket(cp)
+function [r0, r1,r2] = reconnect(cp, obj, imageDir, resultDir, execName)
+    val = javaMethod('parseArguments', cp, imageDir, resultDir, execName);
+    if(val==1)
+        javaMethod('getParams',cp);
+        r0=cp;
+    end
+    
+    r1 = startUpload(cp);
+    
+    javaMethod('updateParameters',obj, cp.executable_name, cp.output_path);
+    javaMethod('startRedis', obj); 
+    r2=obj;
+end
+
+
+function [r1,r2] = start(cp)
+    r1 = startUpload(cp);   
     obj2=javaObject('SocketConnection', cp.executable_name, cp.output_path);
     javaMethod('socketIOConnection',obj2);
-    r=obj2;
-    
+    r2=obj2;    
 end
-
-function reconnect(cp, obj)
-    javaMethod('updateParameters',obj, cp.executable_name, cp.output_path);
-    javaMethod('startRedis', obj);
-end
-
 
 

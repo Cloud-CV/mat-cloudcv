@@ -54,7 +54,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
     }
 
     public void onUnsubscribe(String channel, long subscribedChannels) {
-        //System.out.println("us: " + channel + ":" + subscribedChannels);
+        //System.out.println("unsubscribe: " + channel + ":" + subscribedChannels);
     }
 
     public void onPSubscribe(String pattern, long subscribedChannels) {
@@ -88,11 +88,16 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				
 				if(key.equals("unsubscribe"))
 				{
-					_redis.publish("intercomm", "unsubscribe");	
+					_redis.publish("intercomm", "unsubscribe");
+					
 					if(_subscriber.isConnected()){
 						_subscriber.unsubscribe();		
 						_subscriber.close();
 						System.out.println("Redis Subscriber for Post Requests Disconnected");
+					}
+					else
+					{
+						System.out.println("Redis Subscriber for Post Requests Already Disconnected");
 					}
 				}
 				if(key.equals("picture"))
@@ -372,7 +377,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		}
 		return result;
 	}
-
+	public void disconnect()
+	{
+		if(this._subscriber.isConnected())
+		{
+			this._subscriber.unsubscribe();
+			this._subscriber.close();
+		}
+	}
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
