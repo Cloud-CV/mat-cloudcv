@@ -19,7 +19,6 @@ classdef cloudcv
         function obj = cloudcv()
             obj.params=NaN;
             obj.upload_obj=NaN;
-            obj.socket_obj=NaN;
         end
         
         function obj = init(obj, configFile, imageDir, resultDir, execName)
@@ -47,11 +46,13 @@ classdef cloudcv
         end
     
         function obj = disconnect(obj)
-            if(~isempty(obj.socket_obj))
+            if(strcmp(class(obj.socket_obj),'SocketConnection'))
                 javaMethod('unsubscribe',obj.socket_obj);
+                disp('Disconnecting Redis Server for Socket Connection');
             end
-            if(~isempty(obj.upload_obj))
+            if(strcmp(class(obj.upload_obj),'UploadData'))
                 javaMethod('disconnect',obj.upload_obj);
+                disp('Disconnecting Redis Server for Post Request');
             end
         end
         
@@ -59,7 +60,7 @@ classdef cloudcv
         function obj = run(obj)
             obj = startUpload(obj);
             
-            if(isempty(obj.socket_obj))
+            if(~strcmp(class(obj.socket_obj),'SocketConnection'))
                 disp('Socket Server created');
                 obj.socket_obj = javaObject('SocketConnection', obj.params.executable_name, obj.params.output_path);
                 javaMethod('socketIOConnection',obj.socket_obj);
