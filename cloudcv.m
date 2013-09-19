@@ -1,4 +1,4 @@
-classdef cloudcv
+classdef cloudcv < handle
     %Class for connecting to CloudCV
     properties
         params;
