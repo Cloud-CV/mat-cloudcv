@@ -12,7 +12,7 @@ end
 % check if redis-server is up
 [status,result] = system('redis-cli ping');
 if (status ~= 0) && (status~=1)
-    error('redis-client not present. Need redis for communicating with CloudCV servers');
+    error('redis-client not present. Need redis for communicating with CloudCV servers. Perhaps redis-cli is not in path? (See help setenv)');
 end
 if ~isequal(result,'PONG')
     [status, result] = system('redis-server &');
