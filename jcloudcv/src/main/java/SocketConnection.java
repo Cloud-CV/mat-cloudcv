@@ -65,12 +65,17 @@ class SocketCallback implements IOCallback
     public void on(String event, IOAcknowledge ack, Object... args) {
         JSONObject jobj;
         
-		try {
+		try
+        {
 			jobj = new JSONObject(args[0].toString());
 			Iterator<String> itr=jobj.keys();
 			while(itr.hasNext())
 			{
 				String key=itr.next();
+                if(key.equals("error"))
+                {
+                    System.out.println("Error: " + jobj.getString("error"));
+                }
 				if(key.equals("socketid"))
 				{
 					socketid=jobj.getString("socketid");
@@ -96,9 +101,8 @@ class SocketCallback implements IOCallback
 				else if(key.equals("picture"))
 				{
 					String str=jobj.getString("picture");
-					System.out.println("Picture: " + str);
 					str= "{picture: \"" + str + "\"}";
-					this.redis.publish("intercomm2", str);
+					this.redis.publish("intercomm2", jobj.toString());
 				}
 				else if(key.equals("mat"))
 				{
@@ -116,7 +120,6 @@ class SocketCallback implements IOCallback
 			
 			
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }

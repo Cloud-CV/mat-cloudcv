@@ -22,10 +22,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
-//import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+
 import org.idevlab.rjc.RedisNode;
 import org.idevlab.rjc.RedisOperations;
 import org.idevlab.rjc.ds.SimpleDataSource;
@@ -70,13 +71,11 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	public void onMessage(String channel, String message) {
     	try
     	{
-			JSONObject jobj = new JSONObject(message.toString());
+			JSONObject jobj = new JSONObject(message);
 			Iterator<String> itr=jobj.keys();
-
 			while(itr.hasNext())
 			{
 				String key=itr.next();
-				
 				if(key.equals("socketid"))
 				{
 					_socketid = jobj.getString("socketid");
@@ -97,11 +96,20 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				}
 				if(key.equals("picture"))
 				{
-					String str = new String();
-					str = jobj.getString("picture");
-					
-					this.getImageAndSave(str,"result"+this._socketid+".jpg");
-                    System.out.println(str);
+					String url = new String();
+					url = jobj.getString("picture");
+                    String jobid = new String();
+                    jobid = jobj.getString("jobid");
+
+                    File theDir = new File(this._output_path, jobid);
+                    if(!theDir.exists())
+                    {
+                        theDir.mkdir();
+                    }
+                    String fileName = url.substring( url.lastIndexOf('/')+1, url.length());
+                    File theFile = new File(theDir, fileName);
+					this.getImageAndSave(url,theFile.getPath());
+
 				}
 				
 				if(key.equals("mat"))
@@ -163,7 +171,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		
 			HttpResponse response = hc.execute(get);
 			InputStream is = response.getEntity().getContent();
-			FileOutputStream out = new FileOutputStream(this._output_path+"/"+filename);
+			FileOutputStream out = new FileOutputStream(filename);
 			
 			int data=is.read();
 			while(data!=-1) {
@@ -173,7 +181,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			}
 			is.close();
 			out.close();
-			System.out.println("File Saved: "+this._output_path+"/"+filename);
+			System.out.println("File Saved: " + filename);
 			
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();

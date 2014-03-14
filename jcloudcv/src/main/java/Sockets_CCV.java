@@ -35,14 +35,15 @@ public class Sockets_CCV {
 				t.start();
 				t.join();
 
+
 			/* TEST CODE TO CHECK IF RESTART CODE WORKS PROPERLY*/
-				sock.updateParameters(cp.executable_name, cp.output_path);
-				sock.socketIOConnection();
-				udobj = new UploadData(cp);
-				t = new Thread(udobj);
-				t.start();
-                t.join();
-				
+//				sock.updateParameters(cp.executable_name, cp.output_path);
+//				sock.socketIOConnection();
+//				udobj = new UploadData(cp);
+//				t = new Thread(udobj);
+//				t.start();
+//                t.join();
+//
 				sock.socket_disconnect();
 				
 			} 
