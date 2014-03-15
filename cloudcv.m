@@ -47,12 +47,8 @@ classdef cloudcv < handle
     
         function obj = disconnect(obj)
             if(strcmp(class(obj.socket_obj),'SocketConnection'))
-                javaMethod('unsubscribe',obj.socket_obj);
+                javaMethod('socket_disconnect',obj.socket_obj);
                 disp('Disconnecting Redis Server for Socket Connection');
-            end
-            if(strcmp(class(obj.upload_obj),'UploadData'))
-                javaMethod('disconnect',obj.upload_obj);
-                disp('Disconnecting Redis Server for Post Request');
             end
         end
         
@@ -68,10 +64,10 @@ classdef cloudcv < handle
             else
                 disp('Socket Connection is already established');
                 javaMethod('updateParameters',obj.socket_obj, obj.params.executable_name, obj.params.output_path);
-                javaMethod('startRedis', obj.socket_obj);
-            
+                javaMethod('socketIOConnection', obj.socket_obj);
             end
         end
+        
     end
 end
 

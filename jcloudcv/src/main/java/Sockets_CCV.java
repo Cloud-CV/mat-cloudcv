@@ -17,7 +17,11 @@ public class Sockets_CCV {
 	
 	public static void main(String[] args) throws IOException 
 	{
-		ConfigParser cp = new ConfigParser("/home/dexter/workspace/mcloudcv/config.json");
+
+        System.out.println(Job.files.size());
+        System.out.println(Job.files.toString());
+
+        ConfigParser cp = new ConfigParser("/home/dexter/workspace/mcloudcv/config.json");
 		cp.readConfigFile();
 		int val = cp.parseArguments("","","");
 		cp.getParams();
@@ -31,14 +35,15 @@ public class Sockets_CCV {
 				SocketConnection sock = new SocketConnection(cp.executable_name, cp.output_path);
 				sock.socketIOConnection();
 		
-				Thread t = new Thread(udobj);
-				t.start();
-				t.join();
-
+				//Thread t = new Thread(udobj);
+				//t.start();
+				//t.join();
+                Thread.sleep(3000);
+                sock.socket_disconnect();
 
 			/* TEST CODE TO CHECK IF RESTART CODE WORKS PROPERLY*/
-//				sock.updateParameters(cp.executable_name, cp.output_path);
-//				sock.socketIOConnection();
+				sock.updateParameters(cp.executable_name, cp.output_path);
+				sock.socketIOConnection();
 //				udobj = new UploadData(cp);
 //				t = new Thread(udobj);
 //				t.start();

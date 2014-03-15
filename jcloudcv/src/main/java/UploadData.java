@@ -100,8 +100,11 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 					url = jobj.getString("picture");
                     String jobid = new String();
                     jobid = jobj.getString("jobid");
+                    Job.jobid = jobid;
 
                     File theDir = new File(this._output_path, jobid);
+                    Job.resultpath = theDir.getPath();
+                    Job.executable = this._executable_name;
                     if(!theDir.exists())
                     {
                         theDir.mkdir();
@@ -109,7 +112,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
                     String fileName = url.substring( url.lastIndexOf('/')+1, url.length());
                     File theFile = new File(theDir, fileName);
 					this.getImageAndSave(url,theFile.getPath());
-
+                    Job.addFiles(theFile.getPath());
 				}
 				
 				if(key.equals("mat"))
@@ -136,7 +139,10 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	public UploadData(ConfigParser parser)
 	{
 		_source_path = parser.source_path;
-		_output_path = parser.output_path;
+
+        Job.imagepath = _source_path;
+
+        _output_path = parser.output_path;
 		_executable_name = parser.executable_name;
 		_params = parser.params.toString();
 		
@@ -273,7 +279,7 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 
 	}
 	
-	public String CloudCVPostRequest() throws UnsupportedEncodingException
+	public String CloudCVPostRequest() throws UnsupportedEncodingException, InterruptedException
 	{
 	
 		String token = getToken();
@@ -289,21 +295,28 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 		reqentity.addPart("token", new StringBody(token));
 		reqentity.addPart("executable",new StringBody(this._executable_name));
 		reqentity.addPart("exec_params", new StringBody(this._params));
-		
+		int i =0;
 		while(_socketid.equals(""))
 		{
 			try
             {
                 System.out.println("Waiting for socket connection ");
-				Thread.sleep(3000);
+                if(i<3){
+				    Thread.sleep(3000);
+                    i++;
+                }
+                else
+                {
+                    throw new InterruptedException("Maximum retry over. Exit.");
+                }
 			} catch (InterruptedException e)
             {
-				e.printStackTrace();
+                throw e;
 			}
 		}
 		reqentity.addPart("socketid", new StringBody(this._socketid));
 		
-		for(int i=0;i<imagecount;i++)
+		for(i=0;i<imagecount;i++)
 		{
 			FileBody fileBody = new FileBody(imagelist[i], "application/octet-stream");
 			

@@ -96,12 +96,12 @@ class SocketCallback implements IOCallback
 				{
 					String str=jobj.getString("data");
 					System.out.println("Data:" + str);
+                    Job.output = str;
 					this.redis.publish("intercomm2","{unsubscribe:\"\"}");
 				}
 				else if(key.equals("picture"))
 				{
 					String str=jobj.getString("picture");
-					str= "{picture: \"" + str + "\"}";
 					this.redis.publish("intercomm2", jobj.toString());
 				}
 				else if(key.equals("mat"))
@@ -160,7 +160,8 @@ class SocketConnection implements SubscribeListener, MessageListener
 
     	if(message.startsWith("unsubscribe"))
         {
-    		if(_subscriber.isConnected()){
+    		if(_subscriber.isConnected())
+            {
     			this.redis_unsubcribe();
     			System.out.println("Redis Subscriber for Sockets Disconnected");
     		}
@@ -202,7 +203,7 @@ class SocketConnection implements SubscribeListener, MessageListener
 		this._output_path = output_path;
 
 	}
-	
+
 	public void socketIOConnection() throws Exception
 	{
 		SocketIO.setDefaultSSLSocketFactory(SSLContext.getDefault());
@@ -216,6 +217,7 @@ class SocketConnection implements SubscribeListener, MessageListener
 		{
 			try 
 			{
+                socket = new SocketIO("http://godel.ece.vt.edu:8000/");
 				socket.connect(new SocketCallback(socket,this._exec_name));
 
 			} catch (Exception e) {
