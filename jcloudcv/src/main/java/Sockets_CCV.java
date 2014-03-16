@@ -23,7 +23,7 @@ public class Sockets_CCV {
 
         ConfigParser cp = new ConfigParser("/home/dexter/workspace/mcloudcv/config.json");
 		cp.readConfigFile();
-		int val = cp.parseArguments("","","");
+		int val = cp.parseArguments("","","features");
 		cp.getParams();
 		
 		if(val==1)
@@ -35,15 +35,15 @@ public class Sockets_CCV {
 				SocketConnection sock = new SocketConnection(cp.executable_name, cp.output_path);
 				sock.socketIOConnection();
 		
-				//Thread t = new Thread(udobj);
-				//t.start();
-				//t.join();
+				Thread t = new Thread(udobj);
+				t.start();
+				t.join();
                 Thread.sleep(3000);
                 sock.socket_disconnect();
 
 			/* TEST CODE TO CHECK IF RESTART CODE WORKS PROPERLY*/
-				sock.updateParameters(cp.executable_name, cp.output_path);
-				sock.socketIOConnection();
+				//sock.updateParameters(cp.executable_name, cp.output_path);
+				//sock.socketIOConnection();
 //				udobj = new UploadData(cp);
 //				t = new Thread(udobj);
 //				t.start();

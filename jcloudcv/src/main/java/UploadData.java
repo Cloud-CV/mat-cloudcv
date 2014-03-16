@@ -171,29 +171,36 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	
 	public void getImageAndSave(String imagepath, String filename)
 	{
-		try {
-		HttpClient hc= new DefaultHttpClient();
-		HttpGet get = new HttpGet(imagepath);
-		
-			HttpResponse response = hc.execute(get);
-			InputStream is = response.getEntity().getContent();
-			FileOutputStream out = new FileOutputStream(filename);
-			
-			int data=is.read();
-			while(data!=-1) {
+        int i = 0;
+        while(i < 5)
+        {
+            try {
+                HttpClient hc= new DefaultHttpClient();
+                HttpGet get = new HttpGet(imagepath);
 
-				out.write(data);
-				data=is.read();
-			}
-			is.close();
-			out.close();
-			System.out.println("File Saved: " + filename);
-			
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+                HttpResponse response = hc.execute(get);
+                InputStream is = response.getEntity().getContent();
+                FileOutputStream out = new FileOutputStream(filename);
+
+                int data=is.read();
+                while(data!=-1) {
+
+                    out.write(data);
+                    data=is.read();
+                }
+                is.close();
+                out.close();
+                System.out.println("File Saved: " + filename);
+                break;
+            } catch (ClientProtocolException e) {
+                System.out.println("Retrying to connect");
+                i++;
+            } catch (IOException e) {
+                System.out.println("Retrying to connect");
+                i++;
+            }
+        }
+
 	}
 
 	public String parseJson(JSONArray array)

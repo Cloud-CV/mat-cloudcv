@@ -74,7 +74,7 @@ class SocketCallback implements IOCallback
 				String key=itr.next();
                 if(key.equals("error"))
                 {
-                    System.out.println("Error: " + jobj.getString("error"));
+                    System.out.println("CloudCV Log: " + jobj.get("error").toString());
                 }
 				if(key.equals("socketid"))
 				{
