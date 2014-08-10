@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,8 +26,6 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-
 import org.idevlab.rjc.RedisNode;
 import org.idevlab.rjc.RedisOperations;
 import org.idevlab.rjc.ds.SimpleDataSource;
@@ -40,16 +39,16 @@ import org.json.JSONObject;
 
 public class UploadData implements Runnable, SubscribeListener, MessageListener
 {
-	String _source_path;
-	String _output_path;
-	String _socketid;
-	String _executable_name;
+	String source_path;
+	String output_path;
+	String socketid;
+	String executable_name;
 	String sessionid;
-	SocketIO _socket;
-	RedisOperations _redis;
-	RedisNodeSubscriber _subscriber;
-	String _params;
-	Thread _thread_redis;
+	SocketIO socketIO_obj;
+	RedisOperations redis_obj;
+	RedisNodeSubscriber redis_subs;
+	String params;
+	Thread thread_redis_obj;
 	
 	public void onSubscribe(String channel, long subscribedChannels) {
         //System.out.println("s: " + channel + ":" + subscribedChannels);
@@ -78,14 +77,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				String key=itr.next();
 				if(key.equals("socketid"))
 				{
-					_socketid = jobj.getString("socketid");
+					socketid = jobj.getString("socketid");
 				}
 				
 				if(key.equals("unsubscribe"))
 				{
-					_redis.publish("intercomm", "unsubscribe");
+					redis_obj.publish("intercomm", "unsubscribe");
 					
-					if(_subscriber.isConnected()){
+					if(redis_subs.isConnected()){
 						this.redis_unsubscribe();
 						System.out.println("Redis Subscriber for Uploading Data Disconnected");
 					}
@@ -102,9 +101,9 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
                     jobid = jobj.getString("jobid");
                     Job.jobid = jobid;
 
-                    File theDir = new File(this._output_path, jobid);
+                    File theDir = new File(this.output_path, jobid);
                     Job.resultpath = theDir.getPath();
-                    Job.executable = this._executable_name;
+                    Job.executable = this.executable_name;
                     if(!theDir.exists())
                     {
                         theDir.mkdir();
@@ -119,14 +118,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 				{
 					String str = new String();
 					str = jobj.getString("mat");
-					this.getImageAndSave(str, "results"+this._socketid+".txt");
+					this.getImageAndSave(str, "results"+this.socketid+".txt");
 					
 				}
                 if(key.equals("error"))
                 {
                     String str = new String();
                     str = jobj.getString("error");
-                    this.getImageAndSave(str, "results"+this._socketid+".txt");
+                    this.getImageAndSave(str, "results"+this.socketid+".txt");
 
                 }
 			}
@@ -138,34 +137,34 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 
 	public UploadData(ConfigParser parser)
 	{
-		_source_path = parser.source_path;
+		source_path = parser.source_path;
 
-        Job.imagepath = _source_path;
+        Job.imagepath = source_path;
 
-        _output_path = parser.output_path;
-		_executable_name = parser.executable_name;
-		_params = parser.params.toString();
+        output_path = parser.output_path;
+		executable_name = parser.executable_name;
+		params = parser.params.toString();
 		
-		_socketid = new String();
+		socketid = new String();
 		
-		_redis = new RedisNode(new SimpleDataSource("localhost"));
+		redis_obj = new RedisNode(new SimpleDataSource("localhost"));
 		
 		// Creating Redis Subscriber. Subscribes to intercomm2 channel.
-		_subscriber = new RedisNodeSubscriber();
-	    _subscriber.setDataSource(new SimpleDataSource("localhost"));
-	    _subscriber.setSubscribeListener(this);
-	    _subscriber.subscribe("intercomm2");
-	    _subscriber.setMessageListener(this);
+		redis_subs = new RedisNodeSubscriber();
+	    redis_subs.setDataSource(new SimpleDataSource("localhost"));
+	    redis_subs.setSubscribeListener(this);
+	    redis_subs.subscribe("intercomm2");
+	    redis_subs.setMessageListener(this);
         // Blocking API, hence it runs it its own thread.
-	    _thread_redis = new Thread(new Runnable() 
+	    thread_redis_obj = new Thread(new Runnable() 
 	    {
             public void run() 
             {
-                _subscriber.runSubscription();
+                redis_subs.runSubscription();
             }
         });
 	    
-      _thread_redis.start();
+      thread_redis_obj.start();
 
 	}
 	
@@ -263,9 +262,9 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 	public File[] getImageList()
 	{
 		
-		final Pattern pat= Pattern.compile("([^\\s]+(\\.(jpg|png|gif|bmp))$)", Pattern.CASE_INSENSITIVE);
+		final Pattern pat= Pattern.compile("([^\\s]+(\\.(jpg|png|gif|bmp|jpeg))$)", Pattern.CASE_INSENSITIVE);
 		
-		File dirList = new File(this._source_path);
+		File dirList = new File(this.source_path);
 		
 		File[] imageList= dirList.listFiles(new FileFilter() {
 			
@@ -286,24 +285,65 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 
 	}
 	
+	private String[] identifySourcePath() throws Exception {
+		String[] source_path_tokens = this.source_path.split(":");
+		if ( source_path_tokens.length == 2 ){
+			source_path_tokens[0] = source_path_tokens[0].replaceAll("\\s+","");
+			source_path_tokens[1] = source_path_tokens[1].replaceAll("\\s+","");
+			return source_path_tokens;
+			
+		}
+		else {
+			throw new Exception();
+		}
+		//System.out.println("Source Path: " + this.source_path + "\n Split: " + source_path_tokens);
+	}
+	
+	private void addAccountParameters(MultipartEntity requentity) {
+		
+		//requentity.addPart("");
+	}
+	
 	public String CloudCVPostRequest() throws UnsupportedEncodingException, InterruptedException
 	{
 	
-		String token = getToken();
+		MultipartEntity reqentity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+		
+		String token = getToken();		
+		
+		//this.addAccountParameters();
+		
+		String[] source_path_tokens;
+		/*
+		try {
+			source_path_tokens = this.identifySourcePath();
+			System.out.println(source_path_tokens[0] + "\n" + source_path_tokens[1]);
+			
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		*/
+		
 		File[] imagelist = getImageList();
 		int imagecount = imagelist.length;
 		
 		HttpClient hc= new DefaultHttpClient();
-		HttpPost post = new HttpPost("http://godel.ece.vt.edu/cloudcv/matlab/");
 		
-		MultipartEntity reqentity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-
+		// Previous URL was http://godel.ece.vt.edu/cloudcv/matlab/
+		// Converted into a unique URL for both python and matlab api
+		HttpPost post = new HttpPost("http://godel.ece.vt.edu/cloudcv/api/");
+		
 		reqentity.addPart("count", new StringBody(Integer.toString(imagecount)));
 		reqentity.addPart("token", new StringBody(token));
-		reqentity.addPart("executable",new StringBody(this._executable_name));
-		reqentity.addPart("exec_params", new StringBody(this._params));
+		reqentity.addPart("executable",new StringBody(this.executable_name));
+		reqentity.addPart("exec_params", new StringBody(this.params));
+		
+		/**
+		 * Loop so that it waits for the socket connection to establish before it can
+		 * communicate with the cloud servers
+		 */
 		int i =0;
-		while(_socketid.equals(""))
+		while(socketid.equals(""))
 		{
 			try
             {
@@ -321,8 +361,12 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
                 throw e;
 			}
 		}
-		reqentity.addPart("socketid", new StringBody(this._socketid));
 		
+		reqentity.addPart("socketid", new StringBody(this.socketid));
+		
+		/*
+		 * Adding Files in the post request.
+		 */
 		for(i=0;i<imagecount;i++)
 		{
 			FileBody fileBody = new FileBody(imagelist[i], "application/octet-stream");
@@ -371,10 +415,10 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 
 	public void redis_unsubscribe()
 	{
-		if(this._subscriber.isConnected())
+		if(this.redis_subs.isConnected())
 		{
-			this._subscriber.unsubscribe();
-			this._subscriber.close();
+			this.redis_subs.unsubscribe();
+			this.redis_subs.close();
 		}
 	}
 	@Override
@@ -384,12 +428,14 @@ public class UploadData implements Runnable, SubscribeListener, MessageListener
 			try
             {
 				this.CloudCVPostRequest();
+				
 			} catch (Exception e) {
+				
 				e.printStackTrace();
 			}
 			try
-            {   //This will return when the redis thread ends after unsubscribe.
-				_thread_redis.join();
+            {   
+				thread_redis_obj.join();
                 System.out.println("Redis Thread Ended after unsubscribe");
 			} catch (InterruptedException e) {
 				e.printStackTrace();

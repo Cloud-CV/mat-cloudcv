@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="commons-pool:commons-pool:1.6" type="repository">
+    <properties maven-id="commons-pool:commons-pool:1.6" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/commons-pool/commons-pool/1.6/commons-pool-1.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
