@@ -7,4 +7,4 @@ Please try them out. To read about setup instructions and a brief tutorial regar
 Screeshot
 ------------
 
-[Screenshot](https://raw.github.com/batra-mlp-lab/mcloudcv/master/matlab_screenshot.gif)
+<img src="https://raw.github.com/batra-mlp-lab/mcloudcv/master/matlab_screenshot.gif">
